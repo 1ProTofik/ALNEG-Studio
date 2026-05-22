@@ -104,3 +104,4 @@ async def auth_license_endpoint(client: LicenseCheck):
         raise HTTPException(status_code=403, detail="Dostęp zablokowany: Brak rozliczenia należności 5% brutto dla ALNEG STUDIO LTD.")
         
     return {"status": "AUTHORIZED", "tier": "Commercial 5%"}
+import shard_loader
