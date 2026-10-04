@@ -4,6 +4,7 @@ import os
 from fastapi import FastAPI, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Dict, List, Optional
+import shard_loader
 
 app = FastAPI(title="ALNEG iMortal Core v15.1")
 
@@ -104,4 +105,5 @@ async def auth_license_endpoint(client: LicenseCheck):
         raise HTTPException(status_code=403, detail="Dostęp zablokowany: Brak rozliczenia należności 5% brutto dla ALNEG STUDIO LTD.")
         
     return {"status": "AUTHORIZED", "tier": "Commercial 5%"}
-import shard_loader
+
+app.include_router(shard_loader.router)
