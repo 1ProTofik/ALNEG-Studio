@@ -35,11 +35,12 @@ class ShardRequest(BaseModel):
 
 @router.post("/api/v1/gpu/shard")
 def handle_sharding(request: ShardRequest):
-    import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-
     if request.action == "status":
         model_status = "LOADED" if state.loaded else "UNLOADED"
+        try:
+            import torch
+        except ImportError:
+            return {"status": "ONLINE", "model": model_status, "message": "torch niedostępne"}
         if torch.cuda.is_available():
             devices = {i: torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())}
             return {
@@ -51,6 +52,9 @@ def handle_sharding(request: ShardRequest):
         return {"status": "ERROR", "model": model_status, "message": "CUDA niedostępne"}
 
     if request.action == "load":
+        import torch
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
         with state.lock:
             if state.loaded:
                 return {"status": "ALREADY_LOADED"}
@@ -100,8 +104,12 @@ def handle_sharding(request: ShardRequest):
             state.model = None
             state.tokenizer = None
             gc.collect()
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+            except ImportError:
+                pass
             if os.path.exists(CONFIG_PATH):
                 os.remove(CONFIG_PATH)
             return {"status": "UNLOADED", "message": "VRAM wyczyszczony"}
